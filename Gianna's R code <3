@@ -1,0 +1,203 @@
+```{r packages, warning=FALSE}
+library(Matrix)
+library(Seurat)
+library(SeuratObject)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(pheatmap)
+library(uwot)
+```
+
+```{r load image}
+load("/Users/giannapavilion/mcna_workspace1.RData")
+
+# remove some big unneeded objects to free up memory
+rm(data_list_umaps)
+rm(data_list_qc)
+rm(merge)
+
+# make another slot
+for (sample in names(data_list)) {
+    data_list[[sample]]@assays$Spatial$data <- data_list[[sample]]@assays$Spatial$counts
+}
+```
+
+```{r integrated by Andrew}
+integrated_data <- readRDS("/Users/giannapavilion/Documents/integrated_data.RDS")
+
+# check it works
+DimPlot(integrated_data, label = T)
+SpatialDimPlot(integrated_data, label = T, ncol = 4, label.size = 2)
+```
+
+```{r general qc and calculations}
+
+for (sample in data_list){
+  mean_counts <- mean(sample@meta.data$nCount_Spatial)
+  median_counts <- median(sample@meta.data$nCount_Spatial)
+  print(paste(mean_counts, median_counts))
+  }
+
+for (sample in data_list){
+  mean_counts <- mean(sample@meta.data$nFeature_Spatial)
+  median_counts <- median(sample@meta.data$nFeature_Spatial)
+  print(paste(mean_counts, median_counts))
+  }
+
+################################################################
+
+qc_plots_counts <- function(seurat_obj){
+    plot1 <- SpatialFeaturePlot(seurat_obj, features = "nCount_Spatial")
+    plot3 <- VlnPlot(seurat_obj, features = "nCount_Spatial") + stat_summary(fun=mean, geom="point", shape=23, size=2, color = "blue")
+    plot1 + plot3
+}
+
+for (i in 1:8){
+  print(qc_plots_counts(data_ident_rename[[i]]))
+}
+
+# features:
+
+qc_plots_features <- function(seurat_obj){
+    plot2 <- SpatialFeaturePlot(seurat_obj, features = "nFeature_Spatial")
+    plot4 <- VlnPlot(seurat_obj, features = "nFeature_Spatial") + stat_summary(fun=mean, geom="point", shape=23, size=2, color = "blue")
+    plot2 + plot4
+}
+
+for (i in 1:8){
+  print(qc_plots_features(data_ident_rename[[i]]))
+}
+
+#integrated data
+
+VlnPlot(merge, c("nCount_Spatial", "nFeature_Spatial"), group.by = 'sample')
+
+```
+
+```{r too many genes list}
+
+paper_gene_list <- list(c("MUC5B", "WFDC2", "CDH5", "EMCN", "FLT1", "EGFL7", "MYH11", "MYLK", "ACTG2", "LAMA2", "COL3A1", "COL1A1", "FCGR3A", "ITGAX", "ITGAM", "MS4A7", "ENPP3", "KIT", "HLA-DRB1", "FCER1A", "IL7R", "FOXP3", "CTLA4", "TIGIT", "TOX2", "CD3E", "CD247", "NCAM1", "NCR1", "KLRC1", "GNLY", "PFN1", "GZMA", "GZMB", "POU2AF1", "MS4A1", "MZB1", "JCHAIN", "IGKC", "SERPINB3", "TP63", "KRT5", "CDKN2A", "IL34", "CSF1R"))
+
+t_cells_signature <- list(c("CD4", "FOXP3", "TGFb", "IL10","Th1", "IFNg", "Th2", "IL4", "IL5", "IL13", "TNFA"))
+
+t_regulatory <- list(c("CD4", "FOXP3", "TGFb", "IL10"))
+
+t_proinflammatory <- list(c("CD4","IFNg", "IL4", "IL5", "IL13"))
+
+t_anti_inflammatory <- list(c("CD4", "IL10"))
+
+macrophage_signature <- list(c("CD74", "CD86", "IL1b", "IL6", "TNFa", "INFy", "CCL2", "CCL9", "CCL10", "IL10", "TGFb", "IL4", "IL13", "CCL17", "CCL22"))
+
+m1_signature <- list(c("CD74", "CD86", "IL1b", "IL6", "TNFa", "INFy", "CCL2", "CCL9", "CCL10"))
+  
+m2_signature <- list(c("IL10", "TGFb", "IL4", "IL13", "CCL17", "CCL22"))
+
+apc_langerhan <- list(c("CD207", "CD1a", "IL34", "CSF1R"))
+
+apc_macrophage <- list(c("CD68", "CD14", "CD11b", "F4", "F80", "CD86", "CD74"))
+
+epithelial_genes_list <- list(c("MUC5B", "WFDC2"))
+
+subepithelial_genes_list <- list(c("CDH5", "EMCN", "FLT1", "EGFL7", "MYH11", "MYLK", "ACTG2", "LAMA2", "COL3A1", "COL1A1"))
+
+IL34_CSF1R_list <- list(c("IL34", "CSF1R"))
+
+cancer_genes_list <- list(c("SERPINB3", "TP63", "KRT5", "CDKN2A"))
+
+### remove major marker CD4 and CD74
+
+t_cells_signature2 <- list(c("FOXP3", "TGFb", "IL10","Th1", "IFNg", "Th2", "IL4", "IL5", "IL13", "TNFA"))
+
+t_regulatory2 <- list(c("FOXP3", "TGFb", "IL10"))
+
+t_proinflammatory2 <- list(c("IFNg", "IL4", "IL5", "IL13"))
+
+t_anti_inflammatory2 <- list(c("IL10"))
+
+macrophage_signature2 <- list(c("CD86", "IL1b", "IL6", "TNFa", "INFy", "CCL2", "CCL9", "CCL10", "IL10", "TGFb", "IL4", "IL13", "CCL17", "CCL22"))
+
+m1_signature2 <- list(c("CD86", "IL1b", "IL6", "TNFa", "INFy", "CCL2", "CCL9", "CCL10"))
+  
+m2_signature2 <- list(c("IL10", "TGFb", "IL4", "IL13", "CCL17", "CCL22"))
+
+apc_macrophage2 <- list(c("CD68", "CD14", "CD11b", "F4", "F80", "CD86"))
+
+apc_langerhan <- list(c("CD207", "CD1a", "IL34", "CSF1R")) # stayed the same, nothing removed
+```
+
+```{r even more module scores}
+gene_signatures <- list(
+  list(features = epithelial_genes_list, name = "Epithelial_MS"),
+  list(features = subepithelial_genes_list, name = "Subepi_MS"),
+  list(features = cancer_genes_list, name = "Cancer_MS"),
+  # immune cells
+  list(features = t_cells_signature, name = "TCells_MS"),
+  list(features = t_regulatory, name = "TReg_MS"),
+  list(features = t_proinflammatory, name = "TPro_MS"),
+  list(features = t_anti_inflammatory, name = "TAnti_MS"),
+  list(features = m1_signature, name = "M1_MS"),
+  list(features = m2_signature, name = "M2_MS"),
+  list(features = apc_langerhan, name = "Langherhans_MS"),
+  list(features = apc_macrophage, name = "APC_Mac_MS"),
+  # immune cells without major outliers
+  list(features = t_cells_signature2, name = "TCells_MS2"),
+  list(features = t_regulatory2, name = "TReg_MS2"),
+  list(features = t_proinflammatory2, name = "TPro_MS2"),
+  list(features = t_anti_inflammatory2, name = "TAnti_MS2"),
+  list(features = m1_signature2, name = "M1_MS2"),
+  list(features = m2_signature2, name = "M2_MS2"),
+  list(features = apc_macrophage2, name = "APC_Mac_MS2"),
+)
+for (signature in gene_signatures) {
+  for (i in 1:length(data_ident_rename)) {
+    if (i == 4) { # coz 86_D wants to be difficult
+      data_ident_rename[[i]] <- AddModuleScore(data_ident_rename[[i]], features = signature$features, name = signature$name, nbin = 23)
+    } else { # now back to ur regular scheduled programming
+      data_ident_rename[[i]] <- AddModuleScore(data_ident_rename[[i]], features = signature$features, name = signature$name)
+    }
+  }
+}
+```
+
+```{r map integrated clusters onto individual samples}
+
+cluster_assignments <- integrated_data@meta.data$seurat_clusters
+
+mapping_table <- data.frame(cell_barcode = rownames(integrated_data@meta.data),
+                            cluster_assignment = cluster_assignments)
+
+mapping_table$cell_barcode <- gsub("_1$", "", mapping_table$cell_barcode)
+
+for (i in 1:8){
+data_ident_rename[[i]]@meta.data$integrated_cluster <- 
+  mapping_table$cluster_assignment[match(rownames(data_ident_rename[[i]]@meta.data), mapping_table$cell_barcode)]
+}
+
+matched_indices <- match(rownames(data_ident_rename[[1]]@meta.data), mapping_table$cell_barcode)
+
+data_ident_rename[[1]]@meta.data$integrated_cluster <- mapping_table$cluster_assignment[na.exclude(matched_indices)]
+```
+
+```{r some column names weren't matching, this code fixes it}
+
+mapping_table$cell_barcode <- gsub("_\\d+$", "", mapping_table$cell_barcode)
+
+for (i in 1:8){
+matched_indices <- match(rownames(data_ident_rename[[i]]@meta.data), mapping_table$cell_barcode)
+data_ident_rename[[i]]@meta.data$integrated_cluster <- NA  
+data_ident_rename[[i]]@meta.data$integrated_cluster[!is.na(matched_indices)] <- mapping_table$cluster_assignment[matched_indices[!is.na(matched_indices)]]
+}
+
+```
+
+
+```{r now the fun bit}
+for (i in 1:8) {
+DotPlot(data_ident_rename[[i]], features = paper_gene_list[[1]], 
+        group.by = "integrated_cluster", dot.scale = 6, col.min = 0) 
+        + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+        }
+
+```
+
