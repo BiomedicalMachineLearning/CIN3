@@ -185,19 +185,30 @@ mapping_table$cell_barcode <- gsub("_\\d+$", "", mapping_table$cell_barcode)
 
 for (i in 1:8){
 matched_indices <- match(rownames(data_ident_rename[[i]]@meta.data), mapping_table$cell_barcode)
+
 data_ident_rename[[i]]@meta.data$integrated_cluster <- NA  
-data_ident_rename[[i]]@meta.data$integrated_cluster[!is.na(matched_indices)] <- mapping_table$cluster_assignment[matched_indices[!is.na(matched_indices)]]
+
+data_ident_rename[[i]]@meta.data$integrated_cluster[!is.na(matched_indices)]     
+                <- mapping_table$cluster_assignment[matched_indices[!is.na(matched_indices)]]
 }
 
 ```
 
 
 ```{r now the fun bit}
+
+# individual dot plots with integrated clusters
 for (i in 1:8) {
 DotPlot(data_ident_rename[[i]], features = paper_gene_list[[1]], 
         group.by = "integrated_cluster", dot.scale = 6, col.min = 0) 
         + theme(axis.text.x = element_text(angle = 90, hjust = 1))
         }
+
+# integrated plot with all marker module scores
+DotPlot(integrated_data, features = c("Epithelial_MS", "Cancer_MS", 
+        "TCells_MS", "TReg_MS","TPro_MS","TAnti_MS", "Macro", "Macro1_MS", 
+        "Macro2_MS", "Langherhans_MS", "APC_Macro_MS"), group.by = "seurat_clusters", 
+        dot.scale = 8, col.min = 0) + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 ```
 
