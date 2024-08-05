@@ -1,0 +1,29 @@
+```{r macrophage differences}
+
+metadata <- integrated_data@meta.data
+
+
+metadata <- metadata %>%
+  mutate(Module_Score_Diff = m2MS_1 - m1MS_1)
+
+# Add the calculated difference back to the Seurat object's metadata
+integrated_data@meta.data <- metadata
+
+
+###################################################
+
+# Specify the clusters of interest
+clusters_of_interest <- c(8,9,10)  # Replace with your clusters of interest
+
+# Subset the Seurat object to include only the clusters of interest
+subset_int_data <- subset(integrated_data, idents = clusters_of_interest)
+
+# Convert metadata to a data frame for plotting
+plot_data <- subset_int_data@meta.data %>%
+  dplyr::select(Module_Score_Diff, seurat_clusters) %>%
+  dplyr::rename(Cluster = seurat_clusters)
+
+ggplot(plot_data,aes(x = as.factor(Cluster), y = Module_Score_Diff, fill = as.factor(Cluster))) +
+geom_boxplot() + scale_fill_manual(values = c(`8`="#00A6FF", `9`= "#B385FF", `10`= "#EF67EB")) +
+labs(title = "Module_Score_Diff by Cluster", x = "Cluster", y = "Enrichment Score") + theme(axis.text = element_text(size = 20), legend.text = element_text(size = 15))
+```
