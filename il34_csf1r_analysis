@@ -1,0 +1,97 @@
+get_module_score_clusters <- function (data){
+    matches = list()
+    for(group in groups){
+        cluster_list <-  c()
+        for (idx in 1:nrow(data@meta.data)){
+            if (data@meta.data[[group]][idx] > 0.1){ 
+                other_cols <- setdiff(groups, group)
+                bool <- apply(data@meta.data[idx,][other_cols], 1, function(row) all(row < 0)) #if both greater than 0.1 
+                if (bool == TRUE){
+                
+                    cluster_list <-  c(cluster_list, group)
+                } else{
+                    cluster_list <-  c(cluster_list, FALSE)
+                }
+                          
+            } else {
+                cluster_list <-  c(cluster_list, FALSE)
+            }
+        }
+        matches[[group]] <- cluster_list                      
+    }
+    my_df <- data.frame(do.call(cbind, matches))
+    
+    finalised_column <- c()
+    for (idx in 1:nrow(my_df)){
+        result <- my_df[idx,][my_df[idx,] != "FALSE"]
+        if (length(result) >0){
+            finalised_column <- c(finalised_column, result)
+        } else{
+            finalised_column <- c(finalised_column,"None")
+        }
+    }
+
+    data@meta.data$summarised <- finalised_column                       
+    
+    new_col <- c()
+    for (row in data@meta.data$summarised){
+        if (row  != "None"){
+            int <- as.numeric(strsplit(row,split = "Cluster")[[1]][2])
+
+            val <- group_names[int]
+
+        } else{
+            val <- "None"
+            }
+        new_col <- c(new_col, val)
+        }
+                       
+    data@meta.data$finalised <- new_col
+                              
+    return(data)
+}
+
+add_mod_score <- function(data, module_score_gene_list, assay, slot){
+    data <- AddModuleScore(data,features = module_score_gene_list, assay = assay, slot = slot, nbin = 12)
+    return(data)
+}
+
+#Gene lists
+gene_lists <- list("Cancer" = c("SERPINB3", "TP63", "KRT5", "CDKN2A"),
+                  "IL34_CSF1R" = c("IL34","CSF1R"))
+
+for (i in 1:7){
+    data_ident_rename[[i]] <- add_mod_score(data_ident_rename[[i]], gene_lists, "SCT", "data" )
+}
+
+ModuleScore_plots <- list()
+for (i in 1:7){
+    data_ident_rename[[i]]@meta.data$Tumour <- data_ident_rename[[i]]@meta.data$Cluster1
+    data_ident_rename[[i]]@meta.data$IL34_CSF1R <- data_ident_rename[[i]]@meta.data$Cluster2
+    plot <- SpatialFeaturePlot(data_ident_rename[[i]], features = c("Cancer","IL34_CSF1R"))
+    ModuleScore_plots[[i]] <- plot
+}
+
+```{r}
+for (i in 1:7){
+    data_ident_rename[[i]] <- get_module_score_clusters(data_ident_rename[[i]])
+}
+```
+
+```{r}
+col_pal <- list("Cancer" = "red",
+               "IL34_CSF1R" = "blue",
+               "None" = "lightgrey")
+
+
+ModuleScore_Spot_plots <- list()
+
+for (i in 1:7){
+    plot <- SpatialDimPlot(data_ident_rename[[i]], group.by = "finalised", cols = col_pal)
+    ModuleScore_Spot_plots[[i]] <- plot
+    print(plot)
+}
+
+SpatialDimPlot(data_ident_rename[[1]], group.by = "finalised", cols = c("IL34_CSF1R" = "blue",                                        "Cancer" = "red",                               "None" = "lightgrey"))
+               
+```
