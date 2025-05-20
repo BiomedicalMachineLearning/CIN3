@@ -1,0 +1,21 @@
+# final markers list and module scores
+
+
+t_regulatory <- list(c("CD4", "TNFRSF18", "IL2RA", "FOXP3", "TGFB1", "IL10"))
+
+t_proinflammatory <- list(c("CSF3","IL1A","IL1B","IL6","IFNG", "IL4", "IL5", "IL13","IL36B","IL36G","IL36A", "CXCL8", "TNF", "IL18"))
+
+
+t_anti_inflammatory <- list(c("IL10","IL12A","IL12B", "IL22", "IL37", "IL1F10", "TGFB1","IL4","IL11", "IL13"))
+
+m1_signature <- list(c("CD80", "IFNG","IL1B", "IL6", "TNF", "CCL2", "FCGR3A",
+"FCGR2A", "FCGR1A", "IL12B", "IL23A", "MARCO", "CD86"))
+  
+m2_signature <- list(c("VTCN1","CD36","CD200R1","CD163","MRC1","CD209","CLEC10A
+","CLEC7A","CXCR1", "CXCR2","MSR1", "ARG1","NOS2",
+"RETNLB","HMOX1", "PPARG","CD274", "IL1RN", "TGM2",
+"ACTG1", "TIMP1", "SPHK1", "CXCL1", "MERTK", "ITGAV",
+"IL1A", "VEGFA", "IVNS1ABP", "CXCL8", "DYSF", "EHHADH",
+"RIF1", "LIG4"))
+
+apc_langerhan <- list(c("CD207", "CD1A"))
