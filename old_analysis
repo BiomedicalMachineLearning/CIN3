@@ -151,7 +151,7 @@ gene_signatures <- list(
 )
 for (signature in gene_signatures) {
   for (i in 1:length(data_ident_rename)) {
-    if (i == 4) { # coz 86_D wants to be difficult
+    if (i == 4) { # 86_D diff bins
       data_ident_rename[[i]] <- AddModuleScore(data_ident_rename[[i]], features = signature$features, name = signature$name, nbin = 23)
     } else { # now back to ur regular scheduled programming
       data_ident_rename[[i]] <- AddModuleScore(data_ident_rename[[i]], features = signature$features, name = signature$name)
